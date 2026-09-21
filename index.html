@@ -91,14 +91,29 @@ pre.ascii .hg{color:var(--green)}
 .kr-col.reverted h4{color:var(--coral)}
 .kr-col ul{list-style:none;font-size:12px;color:var(--muted);line-height:1.8}
 .kr-col li:before{content:"— "}
-.graph-wrap{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px}
-.graph-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
-.graph-legend span{display:inline-flex;align-items:center;gap:5px}
-.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.graph3d-container{position:relative;width:100%;height:560px;border-radius:8px;overflow:hidden;background:#0b0a07;border:1px solid var(--border)}
-.graph3d-container canvas{display:block}
-.node3d-label{font-family:var(--mono);font-size:10.5px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;transition:opacity .15s;border:1px solid;background:rgba(14,13,9,.85)}
-.graph-hint{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:10px}
+.audit-gallery{scroll-margin-top:64px}
+.audit-gallery h3{font-size:18px;color:var(--text);margin-bottom:8px}
+.audit-gallery p{color:var(--muted);font-size:12px;margin-bottom:12px}
+.audit-gallery a{color:var(--yellow)}
+.audit-gallery [hidden]{display:none!important}
+.google-panel{border:1px solid var(--border);border-radius:8px;background:var(--s1);padding:22px}
+.google-panel p{color:var(--muted);font-size:13px;max-width:760px}
+.google-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0}
+.google-actions button,.gtm-picker button{border:1px solid var(--border);border-radius:5px;padding:10px 16px;cursor:pointer;background:var(--yellow);color:#16150f;font-weight:600}
+.google-actions button:disabled,.gtm-picker button:disabled{opacity:.5;cursor:not-allowed}
+.google-actions #google-signin{background:#fff;color:#3c4043;border-color:#dadce0}
+.google-g{color:#4285f4;font-weight:700;margin-right:10px;font-size:18px}
+.google-actions #google-signout{background:transparent;color:var(--text)}
+.google-panel [hidden]{display:none!important}
+.gtm-picker{display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin-top:18px}
+.gtm-picker label{display:grid;gap:6px;min-width:190px;flex:1;font-size:12px;color:var(--text)}
+.gtm-picker select{width:100%;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px}
+#google-status{margin-top:12px;overflow-wrap:anywhere}
+#google-status[data-error="true"]{color:#ff9c8d}
+#google-selection{margin-top:14px;border-left:3px solid var(--teal);padding:10px 14px;overflow-wrap:anywhere}
+.google-setup{font-family:var(--mono);font-size:11px!important;margin-top:12px;overflow-wrap:anywhere}
+.audit-gallery iframe{display:block;width:100%;height:880px;border:1px solid var(--border);border-radius:8px;background:var(--bg)}
+@media(max-width:760px){.audit-gallery iframe{height:1050px}}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;margin-top:8px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{background:var(--s2);color:var(--muted);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border)}
@@ -137,10 +152,12 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
     <a href="#overview">Overview</a>
     <a href="#impact-map">Impact map</a>
     <a href="#autoresearch">Autoresearch</a>
-    <a href="#graph">Container graph</a>
+    <a href="#google-connection">Google connection</a>
+    <a href="#style-gallery">Style gallery</a>
     <a href="#unused">Unused</a>
     <a href="#params">Parameters</a>
     <a href="#evolution">Evolution</a>
+    <a id="app-signin" href="/auth/">Sign in →</a><span id="app-user"></span>
   </div>
 </div>
 
@@ -152,7 +169,8 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
     <a class="nav-link" href="#overview">Overview</a>
     <a class="nav-link" href="#impact-map">Impact map</a>
     <a class="nav-link" href="#autoresearch">GTM autoresearch</a>
-    <a class="nav-link" href="#graph">Container graph (3D)</a>
+    <a class="nav-link" href="#google-connection">Connect Google / GTM</a>
+    <a class="nav-link" href="#style-gallery">Audit Pro style gallery</a>
     <a class="nav-link" href="#unused">Unused components</a>
     <a class="nav-link" href="#params">Parameters table</a>
     <a class="nav-link" href="#evolution">Version evolution</a>
@@ -170,7 +188,7 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
   <div class="hero" id="overview">
     <div class="hero-eyebrow">// Organized AI — plugin marketplace</div>
     <h1>GTM command center</h1>
-    <p class="hero-sub">One connected tool: what gtm-docs-watcher detects on Google's help pages, how it maps to the plugin marketplace, the autoresearch loop that fixes containers, and the live 3D graph of the container itself.</p>
+    <p class="hero-sub">One connected tool: what gtm-docs-watcher detects on Google's help pages, how it maps to the plugin marketplace, the autoresearch loop that fixes containers, and the Audit Pro Style Gallery with four visualization styles in 2D and 3D.</p>
     <div class="pills">
       <span class="pill">source <strong>support.google.com/tagmanager/answer/17079602</strong></span>
       <span class="pill">detected <strong>Aug 20, 2026</strong></span>
@@ -191,7 +209,7 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
 └───────────────────────────┬────────────────────────────────┘
                             ▼
 ┌────────────────────────────────────────────────────────────┐
-│  <span class="hg">CONTAINER GRAPH (3D)</span> — same node data, live and rotatable   │
+│  <span class="hg">AUDIT PRO STYLE GALLERY</span> — four styles, 2D and 3D         │
 └────────────────────────────────────────────────────────────┘
 </pre>
   </div>
@@ -228,38 +246,36 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
     </div>
   </div>
 
-  <div class="section" id="graph">
-    <div class="section-comment">// CONTAINER GRAPH — 3D</div>
-    <h2>How tracking connects</h2>
-    <p class="lead">Three rings: variables innermost, triggers in the middle, tags outermost. Drag to rotate, scroll to zoom, click a node to isolate its connections. This reads directly from the same container data as the impact map above.</p>
-    <div class="graph-wrap">
-      <div class="graph-legend">
-        <span><i class="legend-dot" style="background:#0f6e56"></i>ok</span>
-        <span><i class="legend-dot" style="background:#ef9f27"></i>needs attention</span>
-        <span><i class="legend-dot" style="background:#d85a30"></i>missing / unused</span>
-        <span><i class="legend-dot" style="background:#1d9e75"></i>monitor</span>
-        <span><i class="legend-dot" style="background:#7f77dd"></i>tag pushes event to tag</span>
-      </div>
-      <div class="graph3d-container" id="graph3d"></div>
-      <div class="graph-hint">drag = rotate &middot; scroll = zoom &middot; click node = isolate &middot; auto-rotates when idle</div>
+  <section class="section google-panel" id="google-connection" aria-labelledby="google-heading">
+    <div class="section-comment">// PRIVATE GOOGLE CONNECTION</div>
+    <h2 id="google-heading">Connect your Google Tag Manager account</h2>
+    <p>Connect Google to list the GTM accounts, containers, and workspaces you can read. Connecting selects an existing workspace; it does not create an account or modify, publish, or delete anything in GTM.</p>
+    <div class="google-actions">
+      <button type="button" id="google-signin" disabled>Continue to sign in</button>
+      <span id="google-user"></span>
+      <button type="button" id="google-signout" hidden>Disconnect Google</button>
     </div>
-    <div class="add-form" id="node-form">
-      <select id="nf-category">
-        <option value="tags">Tag</option>
-        <option value="triggers">Trigger</option>
-        <option value="variables">Variable</option>
-      </select>
-      <input type="text" id="nf-name" placeholder="Name">
-      <select id="nf-status">
-        <option value="ok">OK</option>
-        <option value="attention">Needs attention</option>
-        <option value="missing">Missing / needs creation</option>
-        <option value="monitor">Monitor</option>
-      </select>
-      <input type="text" id="nf-reason" placeholder="Reason (optional)">
-      <button class="submit-btn" id="nf-submit">+ add node</button>
-    </div>
-  </div>
+    <p id="google-status" role="status" aria-live="polite">Checking sign-in availability…</p>
+    <p id="google-setup" class="google-setup" hidden>Google connection is temporarily unavailable. You can still explore the public demo.</p>
+    <form id="gtm-picker" class="gtm-picker" hidden>
+      <label>GTM account<select id="gtm-account" required disabled><option value="">Choose an account</option></select></label>
+      <label>Container<select id="gtm-container" required disabled><option value="">Choose a container</option></select></label>
+      <label>Workspace<select id="gtm-workspace" required disabled><option value="">Choose a workspace</option></select></label>
+      <button type="submit" id="gtm-connect" disabled>Connect workspace</button>
+    </form>
+    <p id="google-selection" hidden></p>
+    <p style="margin-top:16px;font-size:12px">Google access expires within an hour; reconnect when prompted. Google tokens and gallery snapshots stay encrypted on the server. Connecting automatically loads your workspace into the private gallery below; it does not publish your container data.</p>
+  </section>
+
+  <section class="section audit-gallery" id="style-gallery" aria-labelledby="gallery-title">
+    <div class="section-comment">// GTM AUDIT PRO — STYLE GALLERY</div>
+    <h2 id="gallery-title">One container. A new dimension.</h2>
+    <p>Explore your container in two full-screen 3D views: 01 District and 03 Signal Flow. A connected workspace loads its real GTM configuration privately into both views.</p>
+    <p id="gallery-status" role="status" aria-live="polite">Checking your connected workspace…</p>
+    <div class="google-actions"><button type="button" id="gallery-refresh" hidden>Refresh from GTM</button><a id="atlas-open" href="/style-gallery/explorer.html" target="_blank" rel="noopener" hidden>01 District ↗</a><a id="gallery-open" href="/style-gallery/explorer#flow" target="_blank" rel="noopener" hidden>03 Signal Flow ↗</a></div>
+    <iframe id="gallery-frame" src="about:blank" title="GTM Audit Pro · Style Gallery" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
+    <noscript><p>Enable JavaScript to load your connected workspace, or <a href="/style-gallery/explorer#district">view the public demo</a>.</p></noscript>
+  </section>
 
   <div class="section" id="unused">
     <div class="section-comment">// UNUSED COMPONENTS</div>
@@ -291,15 +307,10 @@ footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-fa
 </div>
 
 <footer>organized ai / plugin marketplace &middot; gtm-command-center.html</footer>
+<script type="module" src="/auth/account.js"></script>
+<script type="module" src="/google-signin.js"></script>
 
-<script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-</script>
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-
+<script>
 const STORAGE_KEY = "gtm-command-center-v1";
 
 const PLUGINS = [
@@ -473,12 +484,6 @@ function computeUsage(nodes){
   EDGES.forEach(e => { if(usage[e.from]!==undefined) usage[e.from]++; if(usage[e.to]!==undefined) usage[e.to]++; });
   return usage;
 }
-function nodeStatus(n, usage){
-  if(n.status === "missing") return "missing";
-  if(n.status === "ok" && usage[n.id] === 0) return "unused";
-  return n.status;
-}
-
 function renderUnused(){
   const nodes = allContainerNodes();
   const usage = computeUsage(nodes);
@@ -518,168 +523,6 @@ function renderEvolution(){
   }).join("");
 }
 
-const STATUS_HEX = { ok:0x1d9e75, attention:0xef9f27, missing:0xd85a30, monitor:0x1d9e75, unused:0xd85a30 };
-const STATUS_CSS = { ok:"#0f6e56", attention:"#ef9f27", missing:"#d85a30", monitor:"#1d9e75", unused:"#d85a30" };
-const CHAIN_HEX = 0x7f77dd;
-const RINGS = { variables: {radius:90, y:-110}, triggers:{radius:150, y:0}, tags:{radius:210, y:110} };
-
-const container3d = document.getElementById("graph3d");
-const width = container3d.clientWidth || 900;
-const height = 560;
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, width/height, 1, 2000);
-camera.position.set(0, 220, 480);
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(width, height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-container3d.appendChild(renderer.domElement);
-const labelRenderer = new CSS2DRenderer();
-labelRenderer.setSize(width, height);
-labelRenderer.domElement.style.position = "absolute";
-labelRenderer.domElement.style.top = "0";
-labelRenderer.domElement.style.left = "0";
-labelRenderer.domElement.style.pointerEvents = "none";
-container3d.appendChild(labelRenderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-const dLight = new THREE.DirectionalLight(0xffffff, 0.9);
-dLight.position.set(150, 300, 250);
-scene.add(dLight);
-const dLight2 = new THREE.DirectionalLight(0x7f77dd, 0.25);
-dLight2.position.set(-200, -100, -150);
-scene.add(dLight2);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.minDistance = 150;
-controls.maxDistance = 900;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.6;
-let idleTimer = null;
-function pauseAutoRotate(){
-  controls.autoRotate = false;
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => { controls.autoRotate = true; }, 4000);
-}
-renderer.domElement.addEventListener("pointerdown", pauseAutoRotate);
-renderer.domElement.addEventListener("wheel", pauseAutoRotate);
-
-let nodeGroup = new THREE.Group();
-let edgeGroup = new THREE.Group();
-scene.add(edgeGroup);
-scene.add(nodeGroup);
-let nodeMeshes = {};
-let nodeLabels = {};
-let edgeLines = [];
-let activeNode = null;
-
-function computePositions(nodesByCat){
-  const positions = {};
-  Object.keys(nodesByCat).forEach(cat => {
-    const items = nodesByCat[cat];
-    const ring = RINGS[cat];
-    if(!ring) return;
-    items.forEach((n, i) => {
-      const angle = (i / items.length) * Math.PI * 2;
-      positions[n.id] = new THREE.Vector3(Math.cos(angle) * ring.radius, ring.y, Math.sin(angle) * ring.radius);
-    });
-  });
-  return positions;
-}
-
-function buildGraph(){
-  scene.remove(nodeGroup); scene.remove(edgeGroup);
-  nodeGroup = new THREE.Group(); edgeGroup = new THREE.Group();
-  scene.add(edgeGroup); scene.add(nodeGroup);
-  nodeMeshes = {}; nodeLabels = {}; edgeLines = [];
-
-  const nodesByCat = state.container;
-  const positions = computePositions(nodesByCat);
-  const nodes = allContainerNodes();
-  const usage = computeUsage(nodes);
-
-  nodes.forEach(n => {
-    const status = nodeStatus(n, usage);
-    const color = STATUS_HEX[status] || 0x888780;
-    const pos = positions[n.id];
-    if(!pos) return;
-    const geo = new THREE.SphereGeometry(11, 24, 24);
-    const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35, roughness: 0.4, metalness: 0.15, transparent: true, opacity: 0.95 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.copy(pos);
-    mesh.userData = { id: n.id, name: n.name, category: n.category, status };
-    nodeGroup.add(mesh);
-    nodeMeshes[n.id] = mesh;
-
-    const div = document.createElement("div");
-    div.className = "node3d-label";
-    div.style.color = STATUS_CSS[status] || "#888780";
-    div.style.borderColor = STATUS_CSS[status] || "#888780";
-    div.textContent = n.name;
-    const label = new CSS2DObject(div);
-    label.position.set(0, 16, 0);
-    mesh.add(label);
-    nodeLabels[n.id] = div;
-  });
-
-  EDGES.forEach(e => {
-    const p1 = positions[e.from], p2 = positions[e.to];
-    if(!p1 || !p2) return;
-    const mid = p1.clone().add(p2).multiplyScalar(0.5);
-    mid.y += 18;
-    const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-    const points = curve.getPoints(24);
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
-    const color = e.type === "chain" ? CHAIN_HEX : 0x2e2d28;
-    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: e.type === "chain" ? 0.85 : 0.55 });
-    const line = new THREE.Line(geo, mat);
-    line.userData = { from: e.from, to: e.to };
-    edgeGroup.add(line);
-    edgeLines.push(line);
-  });
-
-  applyFilter();
-}
-
-function applyFilter(){
-  Object.keys(nodeMeshes).forEach(id => {
-    const mesh = nodeMeshes[id];
-    const label = nodeLabels[id];
-    const related = !activeNode || activeNode === id || EDGES.some(e => (e.from===activeNode && e.to===id) || (e.to===activeNode && e.from===id));
-    mesh.material.opacity = related ? 0.95 : 0.12;
-    mesh.material.emissiveIntensity = related ? 0.35 : 0.05;
-    if(label) label.style.opacity = related ? "1" : "0.1";
-  });
-  edgeLines.forEach(line => {
-    const related = !activeNode || line.userData.from === activeNode || line.userData.to === activeNode;
-    line.material.opacity = related ? (line.userData.from ? 0.7 : 0.55) : 0.04;
-  });
-}
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-let downPos = null;
-renderer.domElement.addEventListener("pointerdown", (ev) => { downPos = { x: ev.clientX, y: ev.clientY }; });
-renderer.domElement.addEventListener("pointerup", (ev) => {
-  if(!downPos) return;
-  const dx = ev.clientX - downPos.x, dy = ev.clientY - downPos.y;
-  if(Math.sqrt(dx*dx+dy*dy) > 6) { downPos = null; return; }
-  downPos = null;
-  const rect = renderer.domElement.getBoundingClientRect();
-  pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects(Object.values(nodeMeshes));
-  activeNode = hits.length > 0 ? (activeNode === hits[0].object.userData.id ? null : hits[0].object.userData.id) : null;
-  applyFilter();
-});
-window.addEventListener("resize", () => {
-  const w = container3d.clientWidth || 900, h = 560;
-  camera.aspect = w / h; camera.updateProjectionMatrix();
-  renderer.setSize(w, h); labelRenderer.setSize(w, h);
-});
-function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera); }
-animate();
-
 document.addEventListener("click", async (e) => {
   const chip = e.target.closest(".chip");
   if(chip){ activeChangeFilter = chip.dataset.change || null; renderChanges(); renderImpactGrid(); return; }
@@ -705,17 +548,16 @@ document.addEventListener("click", async (e) => {
     ["rf-label","rf-version","rf-trigger","rf-before","rf-after","rf-kept","rf-reverted"].forEach(id=>document.getElementById(id).value="");
     await saveState(); renderRounds();
   }
-  if(e.target.id === "nf-submit"){
-    const category = document.getElementById("nf-category").value;
-    const name = document.getElementById("nf-name").value.trim();
-    const status = document.getElementById("nf-status").value;
-    const reason = document.getElementById("nf-reason").value.trim();
-    if(!name) return;
-    state.container[category].push({id:"n"+Date.now(), name, status, reason});
-    document.getElementById("nf-name").value = ""; document.getElementById("nf-reason").value = "";
-    await saveState(); renderUnused(); buildGraph();
-  }
 });
+
+function redirectLegacyGraph(){
+  if(location.hash === '#graph'){
+    history.replaceState(null, '', '#style-gallery');
+    document.getElementById('style-gallery').scrollIntoView();
+  }
+}
+window.addEventListener('hashchange', redirectLegacyGraph);
+redirectLegacyGraph();
 
 const links = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section[id], .hero[id]');
@@ -730,7 +572,6 @@ window.addEventListener('scroll', setActive, { passive: true });
   await loadState();
   renderChanges(); renderImpactGrid(); renderRounds();
   renderUnused(); renderParams(); renderEvolution();
-  buildGraph();
   setActive();
 })();
 </script>

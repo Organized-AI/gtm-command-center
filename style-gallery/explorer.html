@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Container Atlas · GTM Command Center</title>
+  <link rel="stylesheet" href="/style-gallery/explorer.css">
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.js","three/addons/controls/OrbitControls.js":"/vendor/OrbitControls.js"}}</script>
+  <script type="module" src="/auth/account.js"></script>
+</head>
+<body>
+<div id="atlas" class="atlas">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="GTM Command Center home"><span class="brand-mark">GT</span><span class="brand-name">COMMAND CENTER<span>CONTAINER ATLAS / 3D</span></span></a>
+    <nav class="view-switch" aria-label="Diagram perspective">
+      <button data-view="district" aria-pressed="true"><span>01</span> District</button>
+      <button data-view="flow" aria-pressed="false"><span>03</span> Signal Flow</button>
+    </nav>
+    <div class="top-actions"><button id="canvas-mode" aria-pressed="false" title="Hide side panels (M)">Canvas</button><button id="fullscreen" title="Enter full screen (F)" aria-label="Enter full screen">⛶</button></div>
+  </header>
+  <main class="workspace">
+    <aside class="inventory" id="inventory" aria-label="Container inventory">
+      <div class="panel-heading"><span>EXPLORER</span><button id="close-inventory" class="mobile-only" aria-label="Close explorer">×</button><span id="total-count" class="count-pill">—</span></div>
+      <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find an element…" aria-label="Find an element"><kbd>/</kbd></div>
+      <label class="filter-label" for="scope">Show</label>
+      <select id="scope"><option value="all">All elements</option><option value="connected">Connected to selection</option><option value="attention">Flagged / high risk</option><option value="isolated">No detected dependencies</option><option value="paused">Paused</option></select>
+      <div class="inventory-summary"><span id="result-count" aria-live="polite"></span><button id="clear-filters">Clear</button></div>
+      <div id="entity-list" class="entity-list"></div>
+      <div class="inventory-footer"><span class="read-only-dot"></span>READ-ONLY EXPLORATION<span>Nothing here changes your container.</span></div>
+    </aside>
+    <section class="stage" id="stage" aria-label="Interactive 3D container diagram">
+      <div id="scene" role="img" aria-label="3D diagram of container entities. The Explorer list provides a keyboard-accessible equivalent."></div>
+      <div id="labels" aria-hidden="true"></div>
+      <div class="scene-heading">
+        <div class="eyebrow"><span class="tiny-square"></span><span id="view-kicker">01 / CONTAINER DISTRICT</span></div>
+        <h1 id="container-title">Container Atlas</h1>
+        <p id="view-description">Every component has a place. Every relationship has a path.</p>
+        <div class="source-meta"><span id="source-badge">Loading snapshot</span><span id="container-meta"></span></div>
+        <button id="path-badge" class="path-badge" aria-expanded="false" aria-controls="path-panel">PATHS · NO RUNTIME DATA</button>
+        <div id="cluster-focus" class="cluster-focus" hidden><label for="cluster-select">Focus cluster</label><select id="cluster-select" aria-label="Focus cluster"></select></div>
+      </div>
+      <div id="district-controls" class="district-controls" aria-label="District buildings" hidden>
+        <button id="district-web" aria-pressed="false">01 / Expand web GTM</button><button id="district-server" aria-pressed="false">02 / Expand server GTM</button>
+        <select id="district-spacing" aria-label="Expanded floor spacing"><option value="1">Spread / Comfortable</option><option value="2">Spread / Wide</option><option value="3">Spread / Maximum</option></select>
+        <select id="district-routes" aria-label="Visible district routes"><option value="all">All routes</option><option value="transport">Web ↔ server only</option></select>
+        <select id="district-floor" aria-label="Inspect district floor"></select><button id="district-workers" aria-pressed="true">Workers</button>
+        <section class="district-health-panel" aria-label="Paths grouped by status"><div class="district-health-heading"><span>PATH STATUS GROUPS</span><span id="district-health-source"></span></div><span id="district-repair-status" hidden role="status"></span><div id="district-health" class="district-health" aria-label="Filter path status"></div></section>
+      </div>
+      <div class="stage-tools" aria-label="Camera controls">
+        <button id="toggle-inventory" class="mobile-only" aria-label="Open explorer">☷</button>
+        <button id="home-view" title="Fit entire diagram (R)" aria-label="Fit entire diagram">⌂</button>
+        <button id="top-view" aria-pressed="false" title="Top view (T)">Top</button>
+        <button id="zoom-in" aria-label="Zoom in">+</button>
+        <button id="zoom-out" aria-label="Zoom out">−</button>
+      </div>
+      <div id="scene-error" role="alert" hidden></div>
+      <div id="empty-state" class="empty-state" hidden><strong>No matching elements</strong><span>Try another search or clear the filters.</span><button id="empty-clear">Clear filters</button></div>
+      <section id="path-panel" class="path-panel" aria-label="Path signal controls" hidden>
+        <div class="panel-heading"><span>PATH SIGNALS</span><button id="close-path-panel" aria-label="Close path signals">×</button></div>
+        <label for="signal-mode">Data source</label><select id="signal-mode"></select>
+        <p id="signal-source" role="status"></p>
+        <div class="path-encoding"><span>Packets <b>Traffic</b></span><span>Speed <b>Firing frequency</b></span><span>Thickness <b>Importance</b></span><span>Color + glow <b>Tracking health</b></span></div>
+        <div class="health-key"><span><i style="--health-color:#64dca7"></i>Healthy</span><span><i style="--health-color:#efbc61"></i>Degraded</span><span><i style="--health-color:#f17d8d"></i>Failing</span><span><i style="--health-color:#7e8b9d"></i>Unknown</span></div>
+        <p class="signal-hint">Scaled visual samples, not one packet per event. Blocking rules stay dashed; organizational links never carry traffic.</p>
+        <label for="path-select">Inspect a path</label><select id="path-select"></select>
+        <div class="signal-actions"><button id="signal-motion" aria-pressed="true">Pause motion</button><button id="import-signals">Import JSON</button><button id="signal-template">Template</button><button id="clear-signals" hidden>Clear data</button></div>
+        <input id="signal-file" type="file" accept=".json,application/json" hidden>
+        <p class="signal-hint">Files stay in this tab's memory. Nothing is uploaded or saved.</p>
+        <p id="signal-error" role="alert" hidden></p>
+      </section>
+      <div class="scene-bottom">
+        <div class="scene-toggles" aria-label="Diagram display options">
+          <button id="edges-toggle" aria-pressed="true">Paths</button>
+          <button id="path-settings" aria-expanded="false" aria-controls="path-panel">Signals</button>
+          <button id="district-audit" title="Audit unhealthy paths and prepare fixes">Audit</button><button id="labels-toggle" aria-pressed="true">Labels</button>
+          <button id="explode-toggle" aria-pressed="false">Explode</button>
+          <button id="rotate-toggle" aria-pressed="false">Auto orbit</button>
+          <button id="isolate-toggle" aria-pressed="false" disabled>Isolate</button>
+        </div>
+        <div class="scene-caption"><span id="layout-caption">Building height = dependency count</span><span class="drag-help">Drag orbit · Scroll zoom · Shift-drag pan</span></div>
+      </div>
+      <div id="hover-tooltip" class="hover-tooltip" hidden></div>
+    </section>
+    <aside id="inspector" class="inspector" aria-label="Element inspector">
+      <div class="panel-heading"><span id="inspector-heading">CONTAINER OVERVIEW</span><button id="clear-selection" hidden aria-label="Clear selection">×</button></div>
+      <div id="inspector-content" class="inspector-content" aria-live="polite"></div>
+      <div class="inspector-note" id="signal-claim">Configuration relationships, not runtime firing. No event volume or success rate is inferred.</div>
+    </aside>
+  </main>
+  <footer class="statusbar"><span><i class="read-only-dot"></i><span id="status-source">Snapshot</span></span><span id="status-counts"></span><span id="status-selection">Select any element to inspect</span><span class="atlas-account"><a id="app-signin" href="/auth/">Sign in →</a><span id="app-user"></span></span><button id="shortcuts" aria-label="Show keyboard shortcuts">? <span>Shortcuts</span></button></footer>
+</div>
+<dialog id="help-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close shortcuts">×</button></form><h2>Explore your container</h2><dl><dt>Drag</dt><dd>Orbit the scene</dd><dt>Shift + drag / right drag</dt><dd>Pan</dd><dt>Scroll / pinch</dt><dd>Zoom</dd><dt>1 / 3</dt><dd>District / Signal Flow</dd><dt>/</dt><dd>Search elements</dd><dt>R / T</dt><dd>Fit diagram / top view</dd><dt>M / F</dt><dd>Canvas mode / full screen</dd><dt>Escape</dt><dd>Clear selection / close panels</dd></dl><p>All elements can also be selected from the Explorer with your keyboard.</p></dialog>
+<noscript>This diagram requires JavaScript. Return to the <a href="/">Command Center</a> for the summary.</noscript>
+<script>const AUDIT={};</script>
+<script type="module">
+import { boot } from '/style-gallery/explorer.js';
+boot(AUDIT);
+</script>
+</body>
+</html>

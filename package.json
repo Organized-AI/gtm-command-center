@@ -1,0 +1,19 @@
+{
+  "name": "gtm-command-center",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build:worker": "npm run build && node scripts/prepare-worker-assets.mjs",
+    "upload:worker": "wrangler versions upload --config wrangler.worker.toml"
+  },
+  "dependencies": {
+    "@clerk/backend": "3.18.1",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

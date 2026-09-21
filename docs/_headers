@@ -1,0 +1,15 @@
+/api/*
+  Cache-Control: no-store, private
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/
+  Cache-Control: no-cache
+
+/google-signin.js
+  Cache-Control: no-cache
+
+/auth/*
+  Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

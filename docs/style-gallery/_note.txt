@@ -1,0 +1,3 @@
+Public preview: Northstar synthetic demonstration data only.
+This gallery is a static snapshot, not a live GTM connection.
+No client exports, credentials, or OAuth files are included.

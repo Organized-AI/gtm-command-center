@@ -1,0 +1,12 @@
+name = "gtm-command-center"
+pages_build_output_dir = "./docs"
+compatibility_date = "2026-09-04"
+
+[vars]
+# Set to "clerk" after configuring the matching Clerk keys and domain.
+AUTH_PROVIDER = "google"
+APP_ORIGIN = "https://gtm-command-center-96l.pages.dev"
+
+[[kv_namespaces]]
+binding = "GTM_SESSIONS"
+id = "3ffa19fbff38489c9166a4c196e6e8cc"
