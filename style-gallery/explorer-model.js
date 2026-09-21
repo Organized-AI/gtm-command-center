@@ -79,7 +79,8 @@ export function surfaceOf(node, graph) {
   const contexts = graph.meta?.usage_context || graph.selection?.usageContext || [];
   return contexts.includes('server') ? 'server' : 'web';
 }
-export function layoutGraph(graph, view, exploded = false, districtState = {}) {
+export function layoutGraph(graph, view, exploded = false, layoutState = {}) {
+  const districtState = layoutState;
   const positions = new Map(), districts = [], groups = groupNodes(graph.nodes), gap = exploded ? 1.6 : 1;
   if (view === 'district') {
     const buildings = [];
@@ -170,13 +171,31 @@ export function layoutGraph(graph, view, exploded = false, districtState = {}) {
       { name: '04 / CONTAINER CONTEXT', kinds: [], kind: 'folder' }
     ];
     const assigned = new Set(lanes.flatMap(l => l.kinds));
-    const grouped = lanes.map(l => graph.nodes.filter(n => l.kinds.length ? l.kinds.includes(n.kind) : !assigned.has(n.kind)).sort((a,b)=>a.name.localeCompare(b.name)));
-    const width = 16, depth = Math.max(20, ...grouped.map(ns => Math.ceil(ns.length / 2) * 6 + 8));
-    lanes.forEach((lane,i) => {
-      const x = (i - 1.5) * 24 * gap;
-      districts.push({ name: lane.name, kind: lane.kind, x, y: 0, z: 0, width, depth, count: grouped[i].length });
-      grouped[i].forEach((n,j) => positions.set(n.id, { x: x + (j % 2 - .5) * 6, y: 3, z: (Math.floor(j / 2) - (Math.ceil(grouped[i].length / 2) - 1) / 2) * 6, height: 4 }));
-    });
+    const matchesLane = (node,lane) => lane.kinds.length ? lane.kinds.includes(node.kind) : !assigned.has(node.kind);
+    const width = 16;
+    if (view === 'flow' && layoutState.flowSeparated) {
+      const surfaces = ['web','server'];
+      const grouped = surfaces.map(surface => lanes.map(lane => graph.nodes.filter(n => surfaceOf(n,graph) === surface && matchesLane(n,lane)).sort((a,b)=>a.name.localeCompare(b.name))));
+      const surfaceDepths = grouped.map(surfaceGroups => Math.max(18,...surfaceGroups.map(ns => Math.ceil(ns.length / 2) * 6 + 8)));
+      const separation = (surfaceDepths[0] + surfaceDepths[1]) / 2 + 18;
+      surfaces.forEach((surface,surfaceIndex) => {
+        const centerZ = (surfaceIndex ? 1 : -1) * separation / 2;
+        lanes.forEach((lane,i) => {
+          const nodes = grouped[surfaceIndex][i], depth = surfaceDepths[surfaceIndex];
+          const x = (i - 1.5) * 24 * gap;
+          districts.push({name:`${surface === 'web' ? 'WEB GTM' : 'SERVER GTM'} · ${lane.name}`,kind:lane.kind,surface,x,y:0,z:centerZ,width,depth,count:nodes.length});
+          nodes.forEach((n,j) => positions.set(n.id,{x:x+(j%2-.5)*6,y:3,z:centerZ+(Math.floor(j/2)-(Math.ceil(nodes.length/2)-1)/2)*6,height:4}));
+        });
+      });
+    } else {
+      const grouped = lanes.map(l => graph.nodes.filter(n => matchesLane(n,l)).sort((a,b)=>a.name.localeCompare(b.name)));
+      const depth = Math.max(20, ...grouped.map(ns => Math.ceil(ns.length / 2) * 6 + 8));
+      lanes.forEach((lane,i) => {
+        const x = (i - 1.5) * 24 * gap;
+        districts.push({ name: lane.name, kind: lane.kind, x, y: 0, z: 0, width, depth, count: grouped[i].length });
+        grouped[i].forEach((n,j) => positions.set(n.id, { x: x + (j % 2 - .5) * 6, y: 3, z: (Math.floor(j / 2) - (Math.ceil(grouped[i].length / 2) - 1) / 2) * 6, height: 4 }));
+      });
+    }
   }
   return { positions, districts };
 }

@@ -4,7 +4,7 @@ import {PATH_GROUPS,pathGroup,groupPaths} from './explorer-path-groups.js';
 import { districtRoutes } from './explorer-district-routes.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { makeGraph, visibleNodes, layoutGraph, kindMeta, kindOrder, needsAttention, signalEdge, relationLabel, isDependency } from './explorer-model.js';
+import { makeGraph, visibleNodes, layoutGraph, kindMeta, kindOrder, needsAttention, signalEdge, relationLabel, isDependency, surfaceOf } from './explorer-model.js';
 import { entityGeometry, entityIcon, entitySymbols } from './explorer-geometry.js';
 import { pathKey, isSignalPath } from './explorer-signals.js';
 import { PathVisual } from './explorer-path-visual.js';
@@ -23,7 +23,7 @@ export function boot(audit) {
   document.body.insertAdjacentHTML('beforeend',entitySymbols());
   const graph = makeGraph(audit);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const state = { view: 'district', search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: false, edges: true, labels: true, rotate: false, top: false };
+  const state = { view: 'district', search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: false, flowSeparated: false, edges: true, labels: true, rotate: false, top: false };
   const initial = location.hash.slice(1);
   state.cluster='all';
   if (Object.hasOwn(VIEWS, initial)) state.view = initial;
@@ -231,6 +231,7 @@ export function boot(audit) {
     $('cluster-focus').hidden=view!=='observatory';
     $('atlas').dataset.view=view;
     $('district-controls').hidden=view!=='district';
+    $('flow-separate').hidden=view!=='flow';
     if(camera){
       const previous=camera;
       camera=['container','district'].includes(view)?new THREE.OrthographicCamera(-50,50,50,-50,.1,10000):new THREE.PerspectiveCamera(42,1,.1,10000);
@@ -262,7 +263,7 @@ export function boot(audit) {
     labelItems.push(item); return item;
   }
   function rebuildLayout() {
-    const layout=layoutGraph(graph,state.view,state.exploded,districtState);
+    const layout=layoutGraph(graph,state.view,state.exploded,{...districtState,flowSeparated:state.flowSeparated});
     const {positions,districts}=layout;
     districtLayout=state.view==='district'?layout:null;
     const priorFloors=new Map([...(districtVisual?.floors||[])].map(([id,g])=>[id,g.position.clone()]));
@@ -633,6 +634,15 @@ export function boot(audit) {
   $('clear-selection').addEventListener('click',()=>select(null));
   $('clear-filters').addEventListener('click',resetFilters);$('empty-clear').addEventListener('click',resetFilters);
   $('isolate-toggle').addEventListener('click',toggleIsolate);
+  const flowSurfaces=new Set(graph.nodes.map(node=>surfaceOf(node,graph)));
+  $('flow-separate').disabled=flowSurfaces.size<2;
+  if(flowSurfaces.size<2)$('flow-separate').title='This snapshot contains only one GTM surface';
+  $('flow-separate').addEventListener('click',()=>{
+    state.flowSeparated=!state.flowSeparated;
+    $('flow-separate').setAttribute('aria-pressed',String(state.flowSeparated));
+    if(scene){rebuildLayout();fitCamera();}
+    requestRender();
+  });
   for(const [id,key] of [['edges-toggle','edges'],['labels-toggle','labels'],['rotate-toggle','rotate'],['explode-toggle','exploded']]) {
     $(id).addEventListener('click',()=>{state[key]=!state[key];$(id).setAttribute('aria-pressed',String(state[key]));if(key==='exploded'&&scene){rebuildLayout();fitCamera();}updateLinks();requestRender();});
   }

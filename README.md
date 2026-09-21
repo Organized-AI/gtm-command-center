@@ -21,7 +21,7 @@ server uses the synthetic Northstar demo only; OAuth remains on production.
 ## Perspectives
 
 - **01 District:** two container buildings for web and server-side GTM, expandable floors, schematic workers, and grouped path-health routes. Selecting routes within a status group keeps the list open; **Audit** opens evidence, repair actions, and a before/after workspace change review.
-- **03 Signal Flow:** variables → consumers and firing/blocking triggers → tags. Folder membership and version links remain context relationships. This is explanatory direction, not evidence of runtime execution or timing.
+- **03 Signal Flow:** variables → consumers and firing/blocking triggers → tags. **Split Web / Server** pulls the two GTM surfaces into separately labeled lane groups while preserving the paths between them. Folder membership and version links remain context relationships. This is explanatory direction, not evidence of runtime execution or timing.
 
 Click an element or select it in the Explorer to inspect its configuration and
 typed relationships. Search, flagged/paused/isolated filters, focus, neighbor
