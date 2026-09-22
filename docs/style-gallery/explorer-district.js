@@ -66,7 +66,9 @@ export function buildDistrict(parent,layout,fitPoints,selectedFloor,priorFloors=
     for(let x=-w/2+4.5;x<w/2;x+=4.5)box(group,.025,.025,d-3,x,.29,0,seamMat);
     for(let z=-d/2+4.5;z<d/2;z+=4.5)box(group,w-3,.025,.025,0,.3,z,seamMat);
     const floorPrefix=floor.surface==='combined'?'C':floor.surface==='web'?'W':'S';
-    nameplate(group,`${floorPrefix}${String(floor.level+1).padStart(2,'0')} / ${floor.name.toUpperCase()}`,Math.min(18,w-6),0,4.9,-d/2+.82,floor.surface==='web'?'#62ddeb':floor.surface==='server'?'#b9f16b':'#62ddeb',floor.surface==='combined'?'#b9f16b':null);
+    // Put every floor tag on the camera-facing lower edge so expanded floors
+    // retain their C01–C06 identity without requiring a rotation.
+    nameplate(group,`${floorPrefix}${String(floor.level+1).padStart(2,'0')} / ${floor.name.toUpperCase()}`,Math.min(18,w-6),0,1.15,d/2+.68,floor.surface==='web'?'#62ddeb':floor.surface==='server'?'#b9f16b':'#62ddeb',floor.surface==='combined'?'#b9f16b':null);
     const lightMat=new THREE.MeshBasicMaterial({color:accent});
     for(const x of [-w/2+2,w/2-2])for(const z of [-d/2+2,d/2-2])box(group,.35,.06,.7,x,.35,z,lightMat);
     // The equipment occupies the rear service lane; it is architectural detail,

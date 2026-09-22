@@ -23,11 +23,12 @@ export function boot(audit) {
   document.body.insertAdjacentHTML('beforeend',entitySymbols());
   const graph = makeGraph(audit);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const state = { view: 'district', search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: false, surfacesSeparated: false, edges: true, labels: true, rotate: false, top: false };
   const initial = location.hash.slice(1);
+  const initialView=Object.hasOwn(VIEWS,initial)?initial:'district';
+  const state = { view: initialView, search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: initialView==='district', surfacesSeparated: false, edges: true, labels: true, rotate: false, top: false };
   state.cluster='all';
-  if (Object.hasOwn(VIEWS, initial)) state.view = initial;
-  else history.replaceState(null,'',location.pathname + location.search + '#district');
+  $('explode-toggle').setAttribute('aria-pressed',String(state.exploded));
+  if (!Object.hasOwn(VIEWS, initial)) history.replaceState(null,'',location.pathname + location.search + '#district');
   const meta = audit.meta || {};
   const isPrivate = meta.source_mode === 'direct-api';
   let visible = graph.nodes, visibleIds = new Set(visible.map(n => n.id));
@@ -285,7 +286,11 @@ export function boot(audit) {
     if(state.view==='observatory'){grid.geometry.dispose();grid.material.dispose();clusterObjects=buildObservatory(groundGroup,districts,fitPoints);}else groundGroup.add(grid);
     if(state.view==='district'){
       districtVisual=buildDistrict(groundGroup,layout,fitPoints,districtState.selectedFloor,reduced.matches?new Map():priorFloors);
-      for(const b of layout.buildings){const label=makeLabel(`${b.name} · ${b.count?b.count+' ELEMENTS':'NOT CONNECTED'}`,b.surface==='web'?'trigger':b.surface==='server'?'template':'tag');label.el.classList.add('building-label');label.el.style.setProperty('--kind-color',b.surface==='web'?'#00d5e8':b.surface==='server'?'#9cff00':'#f5d85d');label.position.set(b.x,1,b.depth/2+6);fitPoints.push(label.position.clone());}
+      if(!state.exploded)for(const b of layout.buildings){const label=makeLabel(`${b.name} · ${b.count?b.count+' ELEMENTS':'NOT CONNECTED'}`,b.surface==='web'?'trigger':b.surface==='server'?'template':'tag');label.el.classList.add('building-label');label.el.style.setProperty('--kind-color',b.surface==='web'?'#00d5e8':b.surface==='server'?'#9cff00':'#f5d85d');label.position.set(b.x,1,b.depth/2+6);fitPoints.push(label.position.clone());}
+      for(const d of districts){
+        const prefix=d.surface==='combined'?'C':d.surface==='web'?'W':'S',label=makeLabel(`${prefix}${String(d.level+1).padStart(2,'0')} / ${d.name}`,d.kind);
+        label.floorId=d.id;label.el.classList.add('floor-label',`surface-${d.surface}`);label.position.set(d.x,d.y+1.1,d.z+d.depth/2+2.5);
+      }
       $('district-floor').innerHTML='<option value="">Inspect a floor…</option>'+districts.map(d=>`<option value="${esc(d.id)}">${d.surface==='combined'?'Combined':d.surface==='web'?'Web':'Server'} / ${esc(d.name)} (${d.count})</option>`).join('');
       $('district-floor').value=districtState.selectedFloor||'';
       for(const surface of ['web','server']){const b=layout.buildings.find(b=>b.surface===surface),button=$('district-'+surface);button.disabled=!state.surfacesSeparated||!b?.count;button.title=state.surfacesSeparated?'Expand this container independently':'Split Web / Server to expand containers independently';button.setAttribute('aria-pressed',String(state.surfacesSeparated&&(state.exploded||districtState.expandedBuildings.has(surface))));}
@@ -479,7 +484,7 @@ export function boot(audit) {
       const minY=['district','flow'].includes(state.view)?$('district-controls').offsetTop+$('district-controls').offsetHeight+8:state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960&&x>400?65:170;
       if(temp.z>1||temp.z< -1||x<w/2+8||x>width-w/2-8||y<minY||y>height-115)show=false;
       const box={l:x-w/2,r:x+w/2,t:y-h/2,b:y+h/2};
-      if(show&&occupied.some(b=>box.l<b.r+5&&box.r>b.l-5&&box.t<b.b+5&&box.b>b.t-5))show=false;
+      if(show&&!item.floorId&&occupied.some(b=>box.l<b.r+5&&box.r>b.l-5&&box.t<b.b+5&&box.b>b.t-5))show=false;
       el.hidden=!show;
       if(show){occupied.push(box);if(nodeId)labelsShown++;el.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%)`;el.classList.toggle('selected-label',selected);}
     }
