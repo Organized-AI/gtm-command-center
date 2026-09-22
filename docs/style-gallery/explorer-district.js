@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-const colors={web:0x00d5e8,server:0x9cff00};
+const colors={web:0x00d5e8,server:0x9cff00,combined:0xf5d85d};
 function slabGeometry(width,depth,height=.55){
   const r=1.2,w=width/2,d=depth/2,s=new THREE.Shape();
   s.moveTo(-w+r,-d);s.lineTo(w-r,-d);s.quadraticCurveTo(w,-d,w,-d+r);s.lineTo(w,d-r);s.quadraticCurveTo(w,d,w-r,d);s.lineTo(-w+r,d);s.quadraticCurveTo(-w,d,-w,d-r);s.lineTo(-w,-d+r);s.quadraticCurveTo(-w,-d,-w+r,-d);
@@ -10,9 +10,11 @@ export function buildDistrict(parent,layout,fitPoints,selectedFloor,priorFloors=
   const metal=new THREE.MeshStandardMaterial({color:0x657782,metalness:.65,roughness:.48});
   const darkMetal=new THREE.MeshStandardMaterial({color:0x172b38,metalness:.5,roughness:.62});
   function box(group,w,h,d,x,y,z,material=metal){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);group.add(mesh);return mesh;}
-  function nameplate(group,text,width,x,y,z,accent){
+  function nameplate(group,text,width,x,y,z,accent,secondary=null){
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=80;
-    const ctx=canvas.getContext('2d');ctx.fillStyle='#08121b';ctx.fillRect(0,0,512,80);ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.strokeRect(2,2,508,76);ctx.fillStyle=accent;ctx.font='bold 24px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,41,480);
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#08121b';ctx.fillRect(0,0,512,80);ctx.lineWidth=3;
+    if(secondary){ctx.strokeStyle=accent;ctx.beginPath();ctx.moveTo(2,78);ctx.lineTo(2,2);ctx.lineTo(256,2);ctx.stroke();ctx.strokeStyle=secondary;ctx.beginPath();ctx.moveTo(256,2);ctx.lineTo(510,2);ctx.lineTo(510,78);ctx.stroke();ctx.fillStyle=accent;ctx.fillRect(2,75,254,3);ctx.fillStyle=secondary;ctx.fillRect(256,75,254,3);}else{ctx.strokeStyle=accent;ctx.strokeRect(2,2,508,76);}
+    ctx.fillStyle=secondary?'#dce8e8':accent;ctx.font='bold 24px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,41,480);
     const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,width*80/512),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));mesh.position.set(x,y,z);group.add(mesh);
   }
@@ -26,10 +28,12 @@ export function buildDistrict(parent,layout,fitPoints,selectedFloor,priorFloors=
     const baseOutlineGeometry=new THREE.BoxGeometry(b.width+5,.1,b.depth+5);
     const outline=new THREE.LineSegments(new THREE.EdgesGeometry(baseOutlineGeometry),new THREE.LineBasicMaterial({color:colors[b.surface],transparent:true,opacity:.5}));outline.position.y=.35;group.add(outline);baseOutlineGeometry.dispose();
     const accentMat=new THREE.MeshBasicMaterial({color:colors[b.surface]});
-    for(const x of [-b.width/2-1,b.width/2+1])for(const z of [-b.depth/2-1,b.depth/2+1]){box(group,1.4,.8,1.4,x,.6,z,darkMetal);box(group,.55,.12,.55,x,1.06,z,accentMat);}
+    const webMat=new THREE.MeshBasicMaterial({color:colors.web}),serverMat=new THREE.MeshBasicMaterial({color:colors.server});
+    for(const x of [-b.width/2-1,b.width/2+1])for(const z of [-b.depth/2-1,b.depth/2+1]){box(group,1.4,.8,1.4,x,.6,z,darkMetal);box(group,.55,.12,.55,x,1.06,z,b.surface==='combined'?(x<0?webMat:serverMat):accentMat);}
     box(group,7,1.8,2.2,0,1.25,b.depth/2+1.7,darkMetal);
-    nameplate(group,b.surface==='web'?'GTM · WEB CONTAINER':'GTM · SERVER CONTAINER',b.width*.8,0,1.5,b.depth/2+2.9,b.surface==='web'?'#00d5e8':'#9cff00');
-    for(let i=0;i<4;i++)box(group,.45,.3,.12,(i-1.5)*1.1,2,b.depth/2+2.85,accentMat);
+    const plateLabel=b.surface==='combined'?'GTM · WEB + SERVER CONTAINER':b.surface==='web'?'GTM · WEB CONTAINER':'GTM · SERVER CONTAINER';
+    nameplate(group,plateLabel,b.width*.8,0,1.5,b.depth/2+2.9,b.surface==='web'?'#00d5e8':b.surface==='server'?'#9cff00':'#00d5e8',b.surface==='combined'?'#9cff00':null);
+    for(let i=0;i<4;i++)box(group,.45,.3,.12,(i-1.5)*1.1,2,b.depth/2+2.85,b.surface==='combined'?(i<2?webMat:serverMat):accentMat);
     if(!b.count){slab(group,b.width,b.depth,2,0x1a2630,.3);}
     for(const dx of [-1,1])for(const dz of [-1,1])fitPoints.push(new THREE.Vector3(b.x+dx*(b.width/2+4),0,b.z+dz*(b.depth/2+4)));
   }
@@ -37,10 +41,10 @@ export function buildDistrict(parent,layout,fitPoints,selectedFloor,priorFloors=
     const group=new THREE.Group();group.position.set(floor.x,floor.y,floor.z);parent.add(group);floors.set(floor.id,group);group.userData.target=group.position.clone();if(priorFloors.has(floor.id))group.position.copy(priorFloors.get(floor.id));
     const selected=selectedFloor===floor.id,accent=selected?0x9cff00:colors[floor.surface];
     const plate=slab(group,floor.width,floor.depth,0,selected?0x465738:0x344451);plate.userData.floorId=floor.id;hits.push(plate);
-    const rail=new THREE.Mesh(new THREE.BoxGeometry(floor.width-2,.15,.16),new THREE.MeshBasicMaterial({color:accent}));rail.position.set(0,.4,floor.depth/2-.55);group.add(rail);
+    if(floor.surface==='combined'&&!selected){for(const [side,color] of [[-1,colors.web],[1,colors.server]]){const rail=new THREE.Mesh(new THREE.BoxGeometry((floor.width-2)/2,.15,.16),new THREE.MeshBasicMaterial({color}));rail.position.set(side*(floor.width-2)/4,.4,floor.depth/2-.55);group.add(rail);}}else{const rail=new THREE.Mesh(new THREE.BoxGeometry(floor.width-2,.15,.16),new THREE.MeshBasicMaterial({color:accent}));rail.position.set(0,.4,floor.depth/2-.55);group.add(rail);}
     const w=floor.width,d=floor.depth;
     const cornerMat=new THREE.MeshStandardMaterial({color:accent,metalness:.5,roughness:.45});
-    const skinMat=new THREE.MeshStandardMaterial({color:floor.surface==='web'?0x254454:0x364936,metalness:.42,roughness:.64});
+    const skinMat=new THREE.MeshStandardMaterial({color:floor.surface==='web'?0x254454:floor.surface==='server'?0x364936:0x3f402c,metalness:.42,roughness:.64});
     // Cutaway container modules: ISO-like corner castings, a ribbed rear skin,
     // and open front/side bays keep the entities and walking lanes inspectable.
     for(const x of [-w/2+.45,w/2-.45])for(const z of [-d/2+.45,d/2-.45]){
@@ -61,7 +65,8 @@ export function buildDistrict(parent,layout,fitPoints,selectedFloor,priorFloors=
     const seamMat=new THREE.MeshBasicMaterial({color:0x1e313f,transparent:true,opacity:.5});
     for(let x=-w/2+4.5;x<w/2;x+=4.5)box(group,.025,.025,d-3,x,.29,0,seamMat);
     for(let z=-d/2+4.5;z<d/2;z+=4.5)box(group,w-3,.025,.025,0,.3,z,seamMat);
-    nameplate(group,`${floor.surface==='web'?'W':'S'}${String(floor.level+1).padStart(2,'0')} / ${floor.name.toUpperCase()}`,Math.min(18,w-6),0,4.9,-d/2+.82,floor.surface==='web'?'#62ddeb':'#b9f16b');
+    const floorPrefix=floor.surface==='combined'?'C':floor.surface==='web'?'W':'S';
+    nameplate(group,`${floorPrefix}${String(floor.level+1).padStart(2,'0')} / ${floor.name.toUpperCase()}`,Math.min(18,w-6),0,4.9,-d/2+.82,floor.surface==='web'?'#62ddeb':floor.surface==='server'?'#b9f16b':'#62ddeb',floor.surface==='combined'?'#b9f16b':null);
     const lightMat=new THREE.MeshBasicMaterial({color:accent});
     for(const x of [-w/2+2,w/2-2])for(const z of [-d/2+2,d/2-2])box(group,.35,.06,.7,x,.35,z,lightMat);
     // The equipment occupies the rear service lane; it is architectural detail,

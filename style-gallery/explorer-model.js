@@ -94,27 +94,29 @@ export function layoutGraph(graph, view, exploded = false, layoutState = {}) {
       {id:'other', name:'Other elements', kinds:[]}
     ];
     const assigned = new Set(floorKinds.flatMap(f=>f.kinds));
-    const surfaces=['web','server'];
-    const maxCount=Math.max(1,...surfaces.flatMap(surface=>floorKinds.map(f=>graph.nodes.filter(n=>surfaceOf(n,graph)===surface&&(f.id==='other'?!assigned.has(n.kind):f.kinds.includes(n.kind))).length)));
+    const surfaces=districtState.surfacesSeparated?['web','server']:['combined'];
+    const nodesForSurface=surface=>surface==='combined'?graph.nodes:graph.nodes.filter(n=>surfaceOf(n,graph)===surface);
+    const maxCount=Math.max(1,...surfaces.flatMap(surface=>floorKinds.map(f=>nodesForSurface(surface).filter(n=>f.id==='other'?!assigned.has(n.kind):f.kinds.includes(n.kind)).length)));
     const columns=Math.max(3,Math.ceil(Math.sqrt(maxCount)*1.25));
     const rows=Math.max(2,Math.ceil(maxCount/columns));
     const width=columns*5.8+9,depth=rows*5.8+10;
     surfaces.forEach((surface,index)=>{
-      const ns=graph.nodes.filter(n=>surfaceOf(n,graph)===surface);
-      const spread=exploded||districtState.expandedBuildings?.has(surface);
+      const ns=nodesForSurface(surface);
+      const spread=exploded||(surface!=='combined'&&districtState.expandedBuildings?.has(surface));
       const spacing=Math.max(1,Math.min(3,Number(districtState.spacing)||1));
       const pitch=spread?7.4+spacing:5.8;
       const floorWidth=columns*pitch+9,floorDepth=rows*pitch+10;
       const rise=spread?14+spacing*4:8.5;
-      const surfaceGap=width*.65+12+(layoutState.surfacesSeparated?width*.35+18:0);
-      const x=(index?1:-1)*surfaceGap,z=0;
+      const surfaceGap=width*.65+12;
+      const x=surface==='combined'?0:(index?1:-1)*surfaceGap,z=0;
       const floors=floorKinds.map(f=>({...f,nodes:ns.filter(n=>f.id==='other'?!assigned.has(n.kind):f.kinds.includes(n.kind))})).filter(f=>f.nodes.length);
-      const building={surface,name:surface==='web'?'GTM / WEB':'SERVER-SIDE GTM',x,z,width,depth,count:ns.length,height:Math.max(5,floors.length*rise+3)};
+      const building={surface,name:surface==='combined'?'GTM / WEB + SERVER':surface==='web'?'GTM / WEB':'SERVER-SIDE GTM',x,z,width,depth,count:ns.length,height:Math.max(5,floors.length*rise+3)};
       buildings.push(building);
       floors.forEach((floor,level)=>{
         const id=surface+':'+floor.id;
         const pulled=districtState.selectedFloor===id;
-        const fx=x+(spread?(index?1:-1)*((floorWidth-width)/2+level*(3+spacing*2)):0)+(pulled?(index?1:-1)*(floorWidth*.45+8):0);
+        const direction=surface==='combined'?(level%2?1:-1):(index?1:-1);
+        const fx=x+(spread?direction*((floorWidth-width)/2+level*(3+spacing*2)):0)+(pulled?direction*(floorWidth*.45+8):0);
         const fz=z+(spread?level*(2+spacing):0)+(pulled?floorDepth*.8:0),y=2+level*rise;
         const d={id,surface,name:floor.name,kind:floor.nodes[0].kind,x:fx,y,z:fz,width:floorWidth,depth:floorDepth,count:floor.nodes.length,level,nodeIds:floor.nodes.map(n=>n.id)};
         districts.push(d);

@@ -67,7 +67,7 @@ export function boot(audit) {
 
   function districtStatusMap(){return new Map(linkItems.map(item=>[pathKey(item.directed),pathGroup(item.edge,signals.signal(item.edge))]));}
   function scopedDistrictEdges(){
-    const surface=id=>districtLayout?.districts.find(d=>d.nodeIds.includes(id))?.surface;
+    const surface=id=>surfaceOf(graph.byId.get(id),graph);
     return graph.edges.filter(e=>visibleIds.has(e.from)&&visibleIds.has(e.to)&&(districtState.routeScope!=='transport'||surface(e.from)!==surface(e.to)));
   }
   function renderPathGroups(){
@@ -148,7 +148,8 @@ export function boot(audit) {
       const floor=districtLayout.districts.find(d=>d.id===districtState.selectedFloor);
       if(floor){
         $('clear-selection').hidden=false;$('inspector-heading').textContent='FLOOR INSPECTOR';
-        $('inspector-content').innerHTML=`<span class="overview-kicker">${floor.surface==='web'?'WEB GTM':'SERVER-SIDE GTM'} / FLOOR ${floor.level+1}</span><h2>${esc(floor.name)}</h2><p class="lead">${floor.count} elements on this floor. Select an element to inspect its configuration and connections.</p><div class="detail-section">${floor.nodeIds.map(id=>{const node=graph.byId.get(id);return `<button class="connection" data-node="${esc(id)}">${entityIcon(node.kind)}<span>${esc(node.name)}</span><span class="arrow">↗</span></button>`;}).join('')}</div><p class="lead">Workers illustrate activity, not measured execution. ${isPrivate?'This surface comes from the supplied snapshot.':'This is a synthetic two-container example.'}</p>`;return;
+        const floorSurface=floor.surface==='combined'?'COMBINED GTM':floor.surface==='web'?'WEB GTM':'SERVER-SIDE GTM';
+        $('inspector-content').innerHTML=`<span class="overview-kicker">${floorSurface} / FLOOR ${floor.level+1}</span><h2>${esc(floor.name)}</h2><p class="lead">${floor.count} elements on this floor. Select an element to inspect its configuration and connections.</p><div class="detail-section">${floor.nodeIds.map(id=>{const node=graph.byId.get(id);return `<button class="connection" data-node="${esc(id)}">${entityIcon(node.kind)}<span>${esc(node.name)}</span><span class="arrow">↗</span></button>`;}).join('')}</div><p class="lead">Workers illustrate activity, not measured execution. ${isPrivate?'This surface comes from the supplied snapshot.':'This is a synthetic two-container example.'}</p>`;return;
       }
     }
     const n = graph.byId.get(state.selected);
@@ -158,7 +159,10 @@ export function boot(audit) {
       const stats = statistics();
       const kinds = [...new Set(graph.nodes.map(n => n.kind))].sort((a,b) => kindOrder(a) - kindOrder(b));
       const date = meta.run_at && !Number.isNaN(Date.parse(meta.run_at)) ? new Date(meta.run_at).toLocaleString() : 'Not supplied';
-      $('inspector-content').innerHTML = `<span class="overview-kicker">ONE SNAPSHOT. TWO PERSPECTIVES.</span><h2>${VIEWS[state.view].title}</h2><p class="lead">A spatial index of your tags, triggers, variables, and the relationships that connect them.</p><div class="summary-grid"><div class="summary-stat"><strong>${graph.nodes.length}</strong><span>Elements</span></div><div class="summary-stat"><strong>${graph.edges.length}</strong><span>Relationships</span></div><div class="summary-stat"><strong>${stats.dependencies}</strong><span>Dependency links</span></div><div class="summary-stat"><strong>${stats.attention}</strong><span>Flagged / high risk</span></div></div><div class="detail-section"><h3>ENTITY KEY</h3>${kinds.map(kind => `<div class="legend-row" style="--kind-color:${kindMeta(kind).color}"><i class="swatch"></i>${esc(kindMeta(kind).label)}<span class="legend-value">${graph.nodes.filter(n=>n.kind===kind).length}</span></div>`).join('')}</div><div class="view-explainer"><strong>${esc(VIEWS[state.view].kicker.slice(5))}</strong>${esc(VIEWS[state.view].explain)}</div><div class="detail-section"><h3>SNAPSHOT PROVENANCE</h3><p class="lead">${isPrivate ? 'Captured from your connected GTM workspace. Session-protected; not a live event stream.' : 'Northstar synthetic fixture, not your connected container.'}<br><br>${esc(date)}${meta.overall_pct === null ? '<br>Audit score: unassessed.' : ''}</p></div>`;
+      const districtTitle=state.surfacesSeparated?'Web GTM → Server GTM':'One GTM container';
+      const districtExplain=state.surfacesSeparated?'Web and server surfaces have separate container buildings. Floors organize entity types, not importance. Click a floor to pull it out and inspect its elements, or expand either building.':'Web and server elements share one container building. Floors organize entity types across both surfaces. Use Split Web / Server to inspect each container independently.';
+      const title=state.view==='district'?districtTitle:VIEWS[state.view].title,explain=state.view==='district'?districtExplain:VIEWS[state.view].explain;
+      $('inspector-content').innerHTML = `<span class="overview-kicker">ONE SNAPSHOT. TWO PERSPECTIVES.</span><h2>${title}</h2><p class="lead">A spatial index of your tags, triggers, variables, and the relationships that connect them.</p><div class="summary-grid"><div class="summary-stat"><strong>${graph.nodes.length}</strong><span>Elements</span></div><div class="summary-stat"><strong>${graph.edges.length}</strong><span>Relationships</span></div><div class="summary-stat"><strong>${stats.dependencies}</strong><span>Dependency links</span></div><div class="summary-stat"><strong>${stats.attention}</strong><span>Flagged / high risk</span></div></div><div class="detail-section"><h3>ENTITY KEY</h3>${kinds.map(kind => `<div class="legend-row" style="--kind-color:${kindMeta(kind).color}"><i class="swatch"></i>${esc(kindMeta(kind).label)}<span class="legend-value">${graph.nodes.filter(n=>n.kind===kind).length}</span></div>`).join('')}</div><div class="view-explainer"><strong>${esc(VIEWS[state.view].kicker.slice(5))}</strong>${esc(explain)}</div><div class="detail-section"><h3>SNAPSHOT PROVENANCE</h3><p class="lead">${isPrivate ? 'Captured from your connected GTM workspace. Session-protected; not a live event stream.' : 'Northstar synthetic fixture, not your connected container.'}<br><br>${esc(date)}${meta.overall_pct === null ? '<br>Audit score: unassessed.' : ''}</p></div>`;
       const rows=$('inspector-content').querySelectorAll('.legend-row');
       rows.forEach((row,index)=>{
         const kind=kinds[index],km=kindMeta(kind);
@@ -281,10 +285,10 @@ export function boot(audit) {
     if(state.view==='observatory'){grid.geometry.dispose();grid.material.dispose();clusterObjects=buildObservatory(groundGroup,districts,fitPoints);}else groundGroup.add(grid);
     if(state.view==='district'){
       districtVisual=buildDistrict(groundGroup,layout,fitPoints,districtState.selectedFloor,reduced.matches?new Map():priorFloors);
-      for(const b of layout.buildings){const label=makeLabel(`${b.name} · ${b.count?b.count+' ELEMENTS':'NOT CONNECTED'}`,b.surface==='web'?'trigger':'template');label.el.classList.add('building-label');label.el.style.setProperty('--kind-color',b.surface==='web'?'#00d5e8':'#9cff00');label.position.set(b.x,1,b.depth/2+6);fitPoints.push(label.position.clone());}
-      $('district-floor').innerHTML='<option value="">Inspect a floor…</option>'+districts.map(d=>`<option value="${esc(d.id)}">${d.surface==='web'?'Web':'Server'} / ${esc(d.name)} (${d.count})</option>`).join('');
+      for(const b of layout.buildings){const label=makeLabel(`${b.name} · ${b.count?b.count+' ELEMENTS':'NOT CONNECTED'}`,b.surface==='web'?'trigger':b.surface==='server'?'template':'tag');label.el.classList.add('building-label');label.el.style.setProperty('--kind-color',b.surface==='web'?'#00d5e8':b.surface==='server'?'#9cff00':'#f5d85d');label.position.set(b.x,1,b.depth/2+6);fitPoints.push(label.position.clone());}
+      $('district-floor').innerHTML='<option value="">Inspect a floor…</option>'+districts.map(d=>`<option value="${esc(d.id)}">${d.surface==='combined'?'Combined':d.surface==='web'?'Web':'Server'} / ${esc(d.name)} (${d.count})</option>`).join('');
       $('district-floor').value=districtState.selectedFloor||'';
-      for(const surface of ['web','server']){const b=layout.buildings.find(b=>b.surface===surface),button=$('district-'+surface);button.disabled=!b.count;button.setAttribute('aria-pressed',String(state.exploded||districtState.expandedBuildings.has(surface)));}
+      for(const surface of ['web','server']){const b=layout.buildings.find(b=>b.surface===surface),button=$('district-'+surface);button.disabled=!state.surfacesSeparated||!b?.count;button.title=state.surfacesSeparated?'Expand this container independently':'Split Web / Server to expand containers independently';button.setAttribute('aria-pressed',String(state.surfacesSeparated&&(state.exploded||districtState.expandedBuildings.has(surface))));}
     }
     for(const d of state.view==='district'?[]:districts) {
       if(d.width) {
@@ -396,7 +400,7 @@ export function boot(audit) {
       const clusterActive=clusterRelevant(e.from)||clusterRelevant(e.to);
       const selected=!!(state.selected||state.selectedPath||floorIds);
       const transportOnly=state.view==='district'&&districtState.routeScope==='transport';
-      const surface=id=>districtLayout?.districts.find(d=>d.nodeIds.includes(id))?.surface;
+      const surface=id=>surfaceOf(graph.byId.get(id),graph);
       const statusShown=state.view!=='district'||districtState.healthFilter==='all'||pathGroup(e,signals.signal(e))===districtState.healthFilter;
       const shown=state.edges&&statusShown&&visibleIds.has(e.from)&&visibleIds.has(e.to)&&(!transportOnly||surface(e.from)!==surface(e.to));
       const signalShown=signals.active&&!!item.pathVisual;
@@ -638,8 +642,12 @@ export function boot(audit) {
   if(flowSurfaces.size<2)$('flow-separate').title='This snapshot contains only one GTM surface';
   $('flow-separate').addEventListener('click',()=>{
     state.surfacesSeparated=!state.surfacesSeparated;
+    districtState.selectedFloor=null;
     $('flow-separate').setAttribute('aria-pressed',String(state.surfacesSeparated));
+    $('flow-separate').textContent=state.surfacesSeparated?'Combine Containers':'Split Web / Server';
+    $('flow-separate').title=state.surfacesSeparated?'Combine Web and Server-side GTM into one container':'Split into Web GTM and Server-side GTM containers';
     if(scene){rebuildLayout();fitCamera();}
+    renderInspector();
     requestRender();
   });
   for(const [id,key] of [['edges-toggle','edges'],['labels-toggle','labels'],['rotate-toggle','rotate'],['explode-toggle','exploded']]) {
