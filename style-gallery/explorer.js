@@ -71,7 +71,7 @@ export function boot(audit) {
     return graph.edges.filter(e=>visibleIds.has(e.from)&&visibleIds.has(e.to)&&(districtState.routeScope!=='transport'||surface(e.from)!==surface(e.to)));
   }
   function renderPathGroups(){
-    if(state.view!=='district')return;
+    if(!['district','flow'].includes(state.view))return;
     const groups=groupPaths(scopedDistrictEdges(),e=>signals.signal(e));
     const focused=document.activeElement?.closest('#district-health button')?.dataset.health;
     const source=!signals.active?'UNMEASURED':signals.mode==='demo'?'SIMULATED':signals.stale?'STALE · HEALTH UNKNOWN':'IMPORTED SNAPSHOT';
@@ -129,7 +129,7 @@ export function boot(audit) {
   }
 
   function renderInspector() {
-    if(state.view==='district'&&districtState.groupPinned&&districtState.healthFilter!=='all'){
+    if(['district','flow'].includes(state.view)&&districtState.groupPinned&&districtState.healthFilter!=='all'){
       const id=districtState.healthFilter,g=PATH_GROUPS[id],edges=groupPaths(scopedDistrictEdges(),e=>signals.signal(e))[id];
       $('clear-selection').hidden=false;$('inspector-heading').textContent='PATH STATUS GROUP';
       const claim=id==='blocking'?'These are configured blocking rules, not tracking failures.':id==='context'?'Organizational relationships do not have a tracking-health status.':id==='unknown'?'No current health assessment is available for these paths. Missing or stale data is not classified as failure.':signals.mode==='demo'?'These health values are simulated for the demo.':'Health comes from the selected imported measurement snapshot.';
@@ -234,7 +234,7 @@ export function boot(audit) {
     state.view=view; state.top=false;
     $('cluster-focus').hidden=view!=='observatory';
     $('atlas').dataset.view=view;
-    $('district-controls').hidden=view!=='district';
+    $('district-controls').hidden=!['district','flow'].includes(view);
     if(camera){
       const previous=camera;
       camera=['container','district'].includes(view)?new THREE.OrthographicCamera(-50,50,50,-50,.1,10000):new THREE.PerspectiveCamera(42,1,.1,10000);
@@ -395,18 +395,18 @@ export function boot(audit) {
   function updateLinks() {
     for(const item of linkItems) {
       const floorIds=state.view==='district'&&districtState.selectedFloor?new Set(districtLayout?.districts.find(d=>d.id===districtState.selectedFloor)?.nodeIds||[]):null;
-      const e=item.edge, active=state.view==='district'&&districtState.groupPinned&&districtState.groupSelection?pathKey(e)===districtState.groupSelection:floorIds?(floorIds.has(item.edge.from)||floorIds.has(item.edge.to)):state.selectedPath?pathKey(e)===state.selectedPath:state.selected&&(e.from===state.selected||e.to===state.selected);
+      const e=item.edge, active=['district','flow'].includes(state.view)&&districtState.groupPinned&&districtState.groupSelection?pathKey(e)===districtState.groupSelection:floorIds?(floorIds.has(item.edge.from)||floorIds.has(item.edge.to)):state.selectedPath?pathKey(e)===state.selectedPath:state.selected&&(e.from===state.selected||e.to===state.selected);
       const clusterFocused=state.view==='observatory'&&state.cluster!=='all';
       const clusterActive=clusterRelevant(e.from)||clusterRelevant(e.to);
       const selected=!!(state.selected||state.selectedPath||floorIds);
       const transportOnly=state.view==='district'&&districtState.routeScope==='transport';
       const surface=id=>surfaceOf(graph.byId.get(id),graph);
-      const statusShown=state.view!=='district'||districtState.healthFilter==='all'||pathGroup(e,signals.signal(e))===districtState.healthFilter;
+      const statusShown=!['district','flow'].includes(state.view)||districtState.healthFilter==='all'||pathGroup(e,signals.signal(e))===districtState.healthFilter;
       const shown=state.edges&&statusShown&&visibleIds.has(e.from)&&visibleIds.has(e.to)&&(!transportOnly||surface(e.from)!==surface(e.to));
       const signalShown=signals.active&&!!item.pathVisual;
       item.line.visible=shown&&!signalShown;item.arrow.visible=shown&&!item.context&&(!!active||state.view==='flow'||signalShown);
       item.line.material.opacity=selected?(active?.9:.035):(item.context?.18:.4);
-      const baseColor=state.view==='district'?PATH_GROUPS[pathGroup(e,signals.signal(e))].color:e.kind==='tag_trigger_blocking'?'#ef858b':'#7e8b9d';
+      const baseColor=['district','flow'].includes(state.view)?PATH_GROUPS[pathGroup(e,signals.signal(e))].color:e.kind==='tag_trigger_blocking'?'#ef858b':'#7e8b9d';
       item.line.material.color.set(baseColor);
       item.arrow.material.color.set(baseColor);
       item.arrow.material.opacity=selected?(active?.95:.08):.6;
@@ -422,7 +422,7 @@ export function boot(audit) {
   function fitCamera() {
     if(!camera)return;
     const width=$('stage').clientWidth,height=Math.max(1,$('stage').clientHeight);
-    const aspect=width/height,top=state.view==='district'?Math.min(height*.5,$('district-controls').offsetTop+$('district-controls').offsetHeight+16):state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960?40:Math.min(170,height*.3),bottom=$('stage').querySelector('.scene-bottom').offsetHeight+10;
+    const aspect=width/height,top=['district','flow'].includes(state.view)?Math.min(height*.5,$('district-controls').offsetTop+$('district-controls').offsetHeight+16):state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960?40:Math.min(170,height*.3),bottom=$('stage').querySelector('.scene-bottom').offsetHeight+10;
     const usableY=Math.max(.25,(height-top-bottom)/height);
     const bounds=new THREE.Box3().setFromPoints(fitPoints.length?fitPoints:[new THREE.Vector3(-10,0,-10),new THREE.Vector3(10,10,10)]);
     const target=bounds.getCenter(new THREE.Vector3());
@@ -454,7 +454,7 @@ export function boot(audit) {
     const {width,height}=$('stage').getBoundingClientRect();
     camera.aspect=width/Math.max(1,height);
     if(camera.isOrthographicCamera){const h=camera.userData.halfHeight||50;camera.left=-h*camera.aspect;camera.right=h*camera.aspect;camera.top=h;camera.bottom=-h;}
-    const top=state.view==='district'?Math.min(height*.5,$('district-controls').offsetTop+$('district-controls').offsetHeight+16):state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960?40:Math.min(170,height*.3),bottom=$('stage').querySelector('.scene-bottom').offsetHeight+10;
+    const top=['district','flow'].includes(state.view)?Math.min(height*.5,$('district-controls').offsetTop+$('district-controls').offsetHeight+16):state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960?40:Math.min(170,height*.3),bottom=$('stage').querySelector('.scene-bottom').offsetHeight+10;
     camera.setViewOffset(width,height,0,-(top-bottom)/2,width,height);
     camera.updateProjectionMatrix();renderer.setSize(width,height,false);requestRender();
   }
@@ -476,7 +476,7 @@ export function boot(audit) {
       temp.copy(item.position).project(camera);
       const x=(temp.x*.5+.5)*width,y=(-temp.y*.5+.5)*height;
       const w=nodeId?Math.min(170,item.el.textContent.length*5.8+20):item.el.textContent.length*5+16,h=24;
-      const minY=state.view==='district'?$('district-controls').offsetTop+$('district-controls').offsetHeight+8:state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960&&x>400?65:170;
+      const minY=['district','flow'].includes(state.view)?$('district-controls').offsetTop+$('district-controls').offsetHeight+8:state.view==='observatory'&&$('atlas').classList.contains('canvas-only')&&width>960&&x>400?65:170;
       if(temp.z>1||temp.z< -1||x<w/2+8||x>width-w/2-8||y<minY||y>height-115)show=false;
       const box={l:x-w/2,r:x+w/2,t:y-h/2,b:y+h/2};
       if(show&&occupied.some(b=>box.l<b.r+5&&box.r>b.l-5&&box.t<b.b+5&&box.b>b.t-5))show=false;
