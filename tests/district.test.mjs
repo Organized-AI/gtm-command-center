@@ -32,3 +32,16 @@ test('expanding one building leaves the other building unchanged',()=>{
   for(const n of g.nodes.filter(n=>surfaceOf(n,g)==='web'))assert.deepEqual(expanded.positions.get(n.id),normal.positions.get(n.id));
   assert.notDeepEqual(expanded.positions.get('server:tag:ga4'),normal.positions.get('server:tag:ga4'));
 });
+test('shared surface separation control increases District building space without changing floor membership',()=>{
+  const g=makeGraph(pairedDemo(sample));
+  const normal=layoutGraph(g,'district'),separated=layoutGraph(g,'district',false,{surfacesSeparated:true});
+  const normalDistance=Math.abs(normal.buildings[1].x-normal.buildings[0].x);
+  const separatedDistance=Math.abs(separated.buildings[1].x-separated.buildings[0].x);
+  assert.ok(separatedDistance>normalDistance+30);
+  for(const floor of normal.districts){
+    const moved=separated.districts.find(candidate=>candidate.id===floor.id);
+    assert.deepEqual(moved.nodeIds,floor.nodeIds);
+    assert.equal(moved.y,floor.y);
+    assert.equal(moved.z,floor.z);
+  }
+});

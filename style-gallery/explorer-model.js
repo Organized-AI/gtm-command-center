@@ -106,7 +106,8 @@ export function layoutGraph(graph, view, exploded = false, layoutState = {}) {
       const pitch=spread?7.4+spacing:5.8;
       const floorWidth=columns*pitch+9,floorDepth=rows*pitch+10;
       const rise=spread?14+spacing*4:8.5;
-      const x=(index?1:-1)*(width*.65+12),z=0;
+      const surfaceGap=width*.65+12+(layoutState.surfacesSeparated?width*.35+18:0);
+      const x=(index?1:-1)*surfaceGap,z=0;
       const floors=floorKinds.map(f=>({...f,nodes:ns.filter(n=>f.id==='other'?!assigned.has(n.kind):f.kinds.includes(n.kind))})).filter(f=>f.nodes.length);
       const building={surface,name:surface==='web'?'GTM / WEB':'SERVER-SIDE GTM',x,z,width,depth,count:ns.length,height:Math.max(5,floors.length*rise+3)};
       buildings.push(building);
@@ -173,7 +174,7 @@ export function layoutGraph(graph, view, exploded = false, layoutState = {}) {
     const assigned = new Set(lanes.flatMap(l => l.kinds));
     const matchesLane = (node,lane) => lane.kinds.length ? lane.kinds.includes(node.kind) : !assigned.has(node.kind);
     const width = 16;
-    if (view === 'flow' && layoutState.flowSeparated) {
+    if (view === 'flow' && layoutState.surfacesSeparated) {
       const surfaces = ['web','server'];
       const grouped = surfaces.map(surface => lanes.map(lane => graph.nodes.filter(n => surfaceOf(n,graph) === surface && matchesLane(n,lane)).sort((a,b)=>a.name.localeCompare(b.name))));
       const surfaceDepths = grouped.map(surfaceGroups => Math.max(18,...surfaceGroups.map(ns => Math.ceil(ns.length / 2) * 6 + 8)));

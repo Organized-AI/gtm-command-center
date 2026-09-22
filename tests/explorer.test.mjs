@@ -63,7 +63,7 @@ test('flow separation places web and server entities in distinct labeled contain
     {id:'server-client',name:'Server client',kind:'client',surface:'server'},
     {id:'server-tag',name:'Server tag',kind:'tag',surface:'server'}
   ],edges:[{from:'web-tag',to:'web-variable',kind:'tag_variable'},{from:'web-tag',to:'server-client',kind:'transport'}]});
-  const combined=layoutGraph(mixed,'flow'),separated=layoutGraph(mixed,'flow',false,{flowSeparated:true});
+  const combined=layoutGraph(mixed,'flow'),separated=layoutGraph(mixed,'flow',false,{surfacesSeparated:true});
   assert.equal(combined.districts.length,4);
   assert.equal(separated.districts.length,8);
   assert.ok(separated.districts.some(d=>d.name.startsWith('WEB GTM ·')));

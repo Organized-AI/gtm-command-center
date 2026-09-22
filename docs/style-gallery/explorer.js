@@ -23,7 +23,7 @@ export function boot(audit) {
   document.body.insertAdjacentHTML('beforeend',entitySymbols());
   const graph = makeGraph(audit);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const state = { view: 'district', search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: false, flowSeparated: false, edges: true, labels: true, rotate: false, top: false };
+  const state = { view: 'district', search: '', scope: 'all', selected: null, selectedPath:null, isolate: false, exploded: false, surfacesSeparated: false, edges: true, labels: true, rotate: false, top: false };
   const initial = location.hash.slice(1);
   state.cluster='all';
   if (Object.hasOwn(VIEWS, initial)) state.view = initial;
@@ -231,7 +231,6 @@ export function boot(audit) {
     $('cluster-focus').hidden=view!=='observatory';
     $('atlas').dataset.view=view;
     $('district-controls').hidden=view!=='district';
-    $('flow-separate').hidden=view!=='flow';
     if(camera){
       const previous=camera;
       camera=['container','district'].includes(view)?new THREE.OrthographicCamera(-50,50,50,-50,.1,10000):new THREE.PerspectiveCamera(42,1,.1,10000);
@@ -263,7 +262,7 @@ export function boot(audit) {
     labelItems.push(item); return item;
   }
   function rebuildLayout() {
-    const layout=layoutGraph(graph,state.view,state.exploded,{...districtState,flowSeparated:state.flowSeparated});
+    const layout=layoutGraph(graph,state.view,state.exploded,{...districtState,surfacesSeparated:state.surfacesSeparated});
     const {positions,districts}=layout;
     districtLayout=state.view==='district'?layout:null;
     const priorFloors=new Map([...(districtVisual?.floors||[])].map(([id,g])=>[id,g.position.clone()]));
@@ -638,8 +637,8 @@ export function boot(audit) {
   $('flow-separate').disabled=flowSurfaces.size<2;
   if(flowSurfaces.size<2)$('flow-separate').title='This snapshot contains only one GTM surface';
   $('flow-separate').addEventListener('click',()=>{
-    state.flowSeparated=!state.flowSeparated;
-    $('flow-separate').setAttribute('aria-pressed',String(state.flowSeparated));
+    state.surfacesSeparated=!state.surfacesSeparated;
+    $('flow-separate').setAttribute('aria-pressed',String(state.surfacesSeparated));
     if(scene){rebuildLayout();fitCamera();}
     requestRender();
   });
