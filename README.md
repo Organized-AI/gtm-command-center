@@ -187,3 +187,7 @@ Production authentication still reports Google mode with `googleConfigured: fals
 ## Clerk sign-in
 
 The Observatory-themed `/auth/` page and Clerk integration are ready for configuration. See [CLERK-SETUP.md](CLERK-SETUP.md) for activation, migration behavior, and live acceptance checks. The default retains the existing Google connector until `AUTH_PROVIDER=clerk` is set. Worker source now lives in `server/`; `npm run build` bundles it into `docs/_worker.js`.
+
+---
+
+Maintained by Jordaaan Hill ([LinkedIn](https://www.linkedin.com/in/jordaaanhill)).
